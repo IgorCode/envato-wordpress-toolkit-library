@@ -28,6 +28,7 @@ if ( class_exists( 'Theme_Upgrader' ) && ! class_exists( 'Envato_WordPress_Theme
         protected $username;
         protected $api;
         protected $installation_feedback;
+        protected $package;
         
         public function __construct( $username, $api_key ) 
         {
@@ -250,7 +251,8 @@ if ( class_exists( 'Theme_Upgrader' ) && ! class_exists( 'Envato_WordPress_Theme
             $callback = array( &$this , '_http_request_args' );
 
             add_filter( 'http_request_args', $callback, 10, 1 );
-            $result = $this->upgrade( $installed_theme_name, $this->api->wp_download( $marketplace_theme_id ) );
+			$this->package = $this->api->wp_download( $marketplace_theme_id );
+            $result = $this->upgrade( $installed_theme_name );
             remove_filter( 'http_request_args', $callback );
             
             return $result;
@@ -301,26 +303,26 @@ if ( class_exists( 'Theme_Upgrader' ) && ! class_exists( 'Envato_WordPress_Theme
          *
          * @return  array         Boolean.
          */ 
-        public function upgrade( $theme, $package ) {
-  
+        public function upgrade( $theme, $args = array() ) {
+
             $this->init();
             $this->upgrade_strings();
-  
+
             $options = array(
-                'package' => $package,
-                'destination' => WP_CONTENT_DIR . '/themes',
+                'package'           => $this->package,
+                'destination'       => WP_CONTENT_DIR . '/themes',
                 'clear_destination' => true,
-                'clear_working' => true,
-                'hook_extra' => array(
+                'clear_working'     => true,
+                'hook_extra'        => array(
                     'theme' => $theme
                 )
             );
-  
+
             $this->run( $options );
-  
+
             if ( ! $this->result || is_wp_error($this->result) )
                 return $this->result;
-  
+
             return true;
         }
     }
